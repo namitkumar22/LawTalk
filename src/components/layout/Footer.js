@@ -28,14 +28,14 @@ export default function Footer() {
             <span className="badge badge-green"><Lock size={11} />Secure Chat</span>
           </div>
           <div className={styles.contact}>
-            <a href="mailto:support@lawtalk.in" className={styles.contactItem}>
-              <Mail size={14} /> support@lawtalk.in
+            <a href="mailto:support.lawtalk@gmail.com" className={styles.contactItem}>
+              <Mail size={14} /> support.lawtalk@gmail.com
             </a>
-            <a href="tel:+911800000000" className={styles.contactItem}>
-              <Phone size={14} /> 1800-000-0000 (Toll Free)
+            <a href="tel:+918958795103" className={styles.contactItem}>
+              <Phone size={14} /> +91 8958795103
             </a>
             <span className={styles.contactItem}>
-              <MapPin size={14} /> New Delhi, India
+              <MapPin size={14} /> Uttar Pradesh, India
             </span>
           </div>
         </div>
