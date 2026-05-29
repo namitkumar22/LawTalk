@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,10 +13,22 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import styles from "./page.module.css";
 
+export default function LawyerApplicationStatusPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span className="spinner" style={{ width: 36, height: 36 }} />
+      </div>
+    }>
+      <StatusPageInner />
+    </Suspense>
+  );
+}
+
 // Poll every 30 seconds for status changes
 const POLL_INTERVAL = 30000;
 
-export default function LawyerApplicationStatusPage() {
+function StatusPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const lawyerIdFromUrl = searchParams.get("id");
