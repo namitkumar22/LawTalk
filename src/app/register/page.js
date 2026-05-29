@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Scale, ArrowRight, CheckCircle, AlertCircle, User, Mail, Lock, MapPin, Calendar, Shield, Eye, EyeOff } from "lucide-react";
+import { Scale, ArrowRight, CheckCircle, AlertCircle, User, Mail, Lock, MapPin, Calendar, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/layout/Navbar";
 import styles from "../login/page.module.css";
@@ -34,7 +34,6 @@ export default function RegisterPage() {
     city: "",
     state: "",
     dob: "",
-    aadhaarLast4: "",
     agreeTerms: false,
   });
 
@@ -50,7 +49,6 @@ export default function RegisterPage() {
     if (!form.city.trim()) return "Please enter your city.";
     if (!form.state) return "Please select your state.";
     if (!form.dob) return "Please enter your date of birth.";
-    if (!/^\d{4}$/.test(form.aadhaarLast4)) return "Please enter the last 4 digits of your Aadhaar card.";
     if (!form.agreeTerms) return "You must agree to the Terms & Conditions and Privacy Policy.";
     return null;
   };
@@ -69,7 +67,6 @@ export default function RegisterPage() {
       city: form.city.trim(),
       state: form.state,
       dob: form.dob,
-      aadhaarLast4: form.aadhaarLast4,
     });
 
     setLoading(false);
@@ -207,32 +204,6 @@ export default function RegisterPage() {
                         <option value="">Select your state</option>
                         {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
-                    </div>
-                  </div>
-
-                  {/* Aadhaar anti-spam */}
-                  <div className={regStyles.aadhaarBox}>
-                    <div className={regStyles.aadhaarHeader}>
-                      <Shield size={16} color="var(--gold-400)" />
-                      <span>Identity Verification (Anti-Spam)</span>
-                    </div>
-                    <p className={regStyles.aadhaarNote}>
-                      Enter the last 4 digits of your Aadhaar card to prevent duplicate accounts.
-                      Your full Aadhaar number is never stored.
-                    </p>
-                    <div className="form-group">
-                      <label className="form-label">Last 4 digits of Aadhaar *</label>
-                      <input
-                        id="reg-aadhaar"
-                        type="text"
-                        inputMode="numeric"
-                        className="form-input"
-                        placeholder="e.g. 5678"
-                        value={form.aadhaarLast4}
-                        onChange={(e) => update("aadhaarLast4", e.target.value.replace(/\D/g, "").slice(0, 4))}
-                        maxLength={4}
-                        style={{ maxWidth: 180 }}
-                      />
                     </div>
                   </div>
 

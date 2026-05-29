@@ -78,19 +78,7 @@ export function AuthProvider({ children }) {
 
   // Register a regular user (email + password)
   const registerUser = useCallback(async (formData) => {
-    const { name, email, password, city, state, dob, aadhaarLast4 } = formData;
-
-    // 1. Check for duplicate aadhaar last 4 (basic spam check)
-    const { data: existingAadhaar } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("aadhaar_last4", aadhaarLast4)
-      .limit(1);
-
-    // Allow up to 2 accounts per Aadhaar last 4 (family members)
-    if (existingAadhaar && existingAadhaar.length >= 2) {
-      return { error: "Too many accounts associated with this Aadhaar number. Contact support." };
-    }
+    const { name, email, password, city, state, dob } = formData;
 
     // 2. Sign up with Supabase Auth (sends verification email automatically)
     const { data, error } = await supabase.auth.signUp({
@@ -118,7 +106,6 @@ export function AuthProvider({ children }) {
           city: city?.trim(),
           state,
           dob: dob || null,
-          aadhaar_last4: aadhaarLast4,
           role: "user",
           wallet_balance: 100,
         });

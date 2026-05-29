@@ -50,11 +50,9 @@ export default function TermsPage() {
                 <li>Be at least 18 years of age</li>
                 <li>Be a citizen or resident of India, or legally authorized to use services in India</li>
                 <li>Provide accurate, complete, and current information during registration</li>
-                <li>Verify your identity through your registered mobile number (OTP verification)</li>
-                <li>Provide the last 4 digits of your Aadhaar card for anti-spam identity verification</li>
+                <li>Verify your email address upon registration</li>
                 <li>Not have a previously suspended or terminated LawTalk account</li>
               </ul>
-              <p>By providing your Aadhaar last 4 digits, you consent to our anti-fraud verification process. We do not store, share, or transmit your full Aadhaar number. This information is used solely to prevent spam and fraudulent accounts.</p>
             </section>
 
             <section className={styles.section}>

@@ -30,7 +30,6 @@ export default function PrivacyPage() {
               <h3 className={styles.subheading}>1.1 From Users (General Users)</h3>
               <ul>
                 <li><strong>Registration Information:</strong> Full name, mobile number, email address (optional), date of birth, city, state</li>
-                <li><strong>Verification Information:</strong> Last 4 digits of Aadhaar card (for anti-spam identity verification only — we do not store your full Aadhaar number)</li>
                 <li><strong>Profile Information:</strong> Any additional information you choose to provide</li>
                 <li><strong>Communication Data:</strong> Chat messages and consultation records</li>
                 <li><strong>Payment Information:</strong> Transaction records (we do not store full payment card details)</li>
@@ -81,7 +80,6 @@ export default function PrivacyPage() {
               <p>Under the IT (SPDI) Rules, 2011, the following information you provide is considered Sensitive Personal Data:</p>
               <ul>
                 <li>Financial information (payment data)</li>
-                <li>Biometric data (Aadhaar last 4 digits — treated with heightened security)</li>
                 <li>Any health or medical information shared during legal consultations</li>
               </ul>
               <p>We collect and process this information only with your explicit consent, which you provide during registration. You may withdraw your consent, but this may affect your ability to use the platform.</p>

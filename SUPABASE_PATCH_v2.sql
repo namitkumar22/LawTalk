@@ -2,6 +2,7 @@
 -- LAWTALK — PATCH v2 SQL
 -- Run this ENTIRELY in Supabase SQL Editor
 -- Fixes:
+--   0. Remove aadhaar_last4 column (unreliable — too many collisions)
 --   1. RLS policy for lawyer registration (INSERT allowed without auth)
 --   2. Chat session management (auto-expiry, report button)
 --   3. Admin forgot password mechanism
@@ -9,6 +10,15 @@
 --   5. Report/complaint system
 --   6. Admin workload-balanced assignment
 -- ============================================================
+
+-- ============================================================
+-- FIX 0: REMOVE AADHAAR LAST-4 COLUMN
+-- Reason: Last 4 digits of Aadhaar are not unique enough.
+-- Millions of people share the same last 4 digits, making this
+-- useless as an anti-spam measure and a privacy liability.
+-- Anti-spam is now handled by email verification only.
+-- ============================================================
+ALTER TABLE public.profiles DROP COLUMN IF EXISTS aadhaar_last4;
 
 -- ============================================================
 -- FIX 1: LAWYER REGISTRATION RLS
