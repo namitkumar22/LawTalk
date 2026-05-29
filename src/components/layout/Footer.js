@@ -1,14 +1,41 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
-import { Scale, Mail, Phone, MapPin, Shield, FileText, Lock } from "lucide-react";
+import { Scale, Mail, Phone, MapPin, Shield, FileText, Lock, LayoutDashboard, Gavel, Search } from "lucide-react";
 import { APP_NAME, SPECIALIZATIONS } from "@/lib/constants";
+import { useAuth } from "@/context/AuthContext";
 import styles from "./Footer.module.css";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { user, isAuthenticated } = useAuth();
+  const isLawyer = user?.role === "lawyer";
+  const isUser = isAuthenticated && !isLawyer;
+
+  // Role-aware quick links
+  const quickLinks = isLawyer
+    ? [
+        { label: "My Dashboard", href: "/lawyer/dashboard", icon: LayoutDashboard },
+        { label: "Find Lawyers", href: "/lawyers", icon: Search },
+        { label: "How It Works", href: "/#how-it-works", icon: null },
+      ]
+    : isUser
+    ? [
+        { label: "My Dashboard", href: "/dashboard", icon: LayoutDashboard },
+        { label: "Find a Lawyer", href: "/lawyers", icon: null },
+        { label: "How It Works", href: "/#how-it-works", icon: null },
+      ]
+    : [
+        { label: "Find a Lawyer", href: "/lawyers", icon: null },
+        { label: "Register as Lawyer", href: "/lawyer/register", icon: null },
+        { label: "Create Account", href: "/register", icon: null },
+        { label: "Sign In", href: "/login", icon: null },
+        { label: "How It Works", href: "/#how-it-works", icon: null },
+      ];
 
   return (
     <footer className={styles.footer}>
-      {/* Gold gradient divider */}
       <div className="divider-gold" style={{ margin: 0 }} />
 
       <div className={`container ${styles.inner}`}>
@@ -40,15 +67,15 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Quick Links */}
+        {/* Quick Links — role-aware */}
         <div className={styles.column}>
           <h4 className={styles.colTitle}>Quick Links</h4>
           <ul className={styles.linkList}>
-            <li><Link href="/lawyers">Find a Lawyer</Link></li>
-            <li><Link href="/lawyer/register">Register as Lawyer</Link></li>
-            <li><Link href="/register">Create Account</Link></li>
-            <li><Link href="/login">Sign In</Link></li>
-            <li><Link href="/#how-it-works">How It Works</Link></li>
+            {quickLinks.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href}>{link.label}</Link>
+              </li>
+            ))}
           </ul>
         </div>
 

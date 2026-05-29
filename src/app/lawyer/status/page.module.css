@@ -1,0 +1,152 @@
+.page { min-height: 100vh; padding: var(--space-10) 0 var(--space-20); }
+
+.inner { max-width: 700px; margin: 0 auto; }
+
+/* Header */
+.header { text-align: center; margin-bottom: var(--space-8); }
+.logoRow { display: flex; align-items: center; justify-content: center; gap: var(--space-2); margin-bottom: var(--space-5); }
+.logoIcon { width: 36px; height: 36px; border-radius: var(--radius-md); background: var(--gradient-gold); display: flex; align-items: center; justify-content: center; color: var(--navy-900); }
+.logoText { font-size: 1.2rem; font-weight: 800; background: var(--gradient-gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.title { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 800; margin-bottom: var(--space-2); }
+.subtitle { font-size: 0.9rem; color: var(--text-muted); }
+
+/* Lookup card */
+.lookupCard {
+  background: var(--gradient-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-10) var(--space-8);
+  text-align: center;
+}
+.lookupIcon { margin: 0 auto var(--space-4); width: 64px; height: 64px; border-radius: 50%; background: rgba(201,168,76,0.08); display: flex; align-items: center; justify-content: center; }
+.lookupTitle { font-size: 1.3rem; font-weight: 700; margin-bottom: var(--space-2); }
+.lookupSub { color: var(--text-muted); font-size: 0.875rem; margin-bottom: var(--space-5); }
+.lookupForm { display: flex; flex-direction: column; gap: var(--space-3); max-width: 380px; margin: 0 auto; }
+.lookupError { display: flex; align-items: center; gap: var(--space-2); font-size: 0.82rem; color: #f87171; }
+
+/* Loading */
+.loadingState { text-align: center; padding: var(--space-12); display: flex; flex-direction: column; align-items: center; gap: var(--space-4); color: var(--text-muted); }
+
+/* Status card */
+.resultWrap { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.statusCard {
+  background: var(--gradient-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+}
+
+/* Lawyer header */
+.lawyerHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-6) 0;
+  flex-wrap: wrap;
+}
+.lawyerName { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); }
+.lawyerEmail { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+.lawyerMeta { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+
+.divider { height: 1px; background: var(--border); margin: var(--space-5) var(--space-6); }
+
+/* Status body */
+.statusBody { text-align: center; padding: 0 var(--space-8) var(--space-6); }
+.statusIconWrap { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4); }
+.statusTitle { font-size: 1.3rem; font-weight: 800; margin-bottom: var(--space-3); }
+.statusDesc { color: var(--text-muted); font-size: 0.875rem; line-height: 1.7; max-width: 440px; margin: 0 auto; }
+
+/* Rejection box */
+.rejectionBox {
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  background: rgba(244,63,94,0.06);
+  border: 1px solid rgba(244,63,94,0.2);
+  border-radius: var(--radius-lg);
+  text-align: left;
+}
+.rejectionLabel { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #f87171; margin-bottom: var(--space-2); }
+.rejectionText { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+
+/* Progress stepper */
+.progressSection { padding: var(--space-5) var(--space-6); border-top: 1px solid var(--border); background: rgba(255,255,255,0.01); }
+.progressLabel { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: var(--space-5); }
+.steps { display: flex; align-items: flex-start; gap: 0; }
+.stepItem { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+
+.stepCircle {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+  position: relative; z-index: 1;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+.stepDone { background: rgba(16,185,129,0.12); border-color: var(--emerald); color: var(--emerald); }
+.stepActive { background: rgba(201,168,76,0.1); border-color: var(--gold-400); }
+.stepRejected { background: rgba(244,63,94,0.1); border-color: #f87171; color: #f87171; }
+
+.stepPulse {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--gold-400);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } }
+
+.stepNum { font-size: 0.72rem; font-weight: 700; }
+
+.stepLine {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+.stepLineDone { background: var(--emerald); }
+
+.stepLabel { font-size: 0.68rem; color: var(--text-muted); margin-top: var(--space-2); text-align: center; line-height: 1.4; }
+.stepLabelDone { color: var(--text-secondary); }
+.stepLabelActive { color: var(--gold-400); font-weight: 600; }
+
+/* Actions */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.lastChecked { font-size: 0.72rem; color: var(--text-muted); text-align: center; padding: 0 var(--space-6) var(--space-4); }
+
+.spinning { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Info grid */
+.infoGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+.infoCard {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--gradient-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  align-items: flex-start;
+}
+.infoTitle { font-size: 0.82rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.infoText { font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; }
+
+@media (max-width: 640px) {
+  .lookupCard { padding: var(--space-6); }
+  .infoGrid { grid-template-columns: 1fr; }
+  .steps { gap: 0; }
+  .stepLabel { display: none; }
+  .lawyerHeader { padding: var(--space-4); }
+  .statusBody { padding: 0 var(--space-4) var(--space-5); }
+  .progressSection { padding: var(--space-4); }
+  .actions { padding: var(--space-4); }
+}

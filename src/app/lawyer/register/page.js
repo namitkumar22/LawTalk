@@ -41,6 +41,7 @@ export default function LawyerRegisterPage() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedLawyerId, setSubmittedLawyerId] = useState(null);
   const [error, setError] = useState("");
   const [showPass, setShowPass] = useState(false);
 
@@ -161,6 +162,7 @@ export default function LawyerRegisterPage() {
       return;
     }
 
+    if (result.lawyerId) setSubmittedLawyerId(result.lawyerId);
     setSubmitted(true);
   };
 
@@ -171,14 +173,23 @@ export default function LawyerRegisterPage() {
         <div className={styles.page}>
           <motion.div className={styles.successCard} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
             <div className={styles.successIcon}><CheckCircle size={56} color="var(--emerald)" /></div>
-            <h1>Application Submitted!</h1>
+            <h1>Application Submitted! 🎉</h1>
             <p>Your registration has been received. Our admin team will verify your documents and credentials within 24–48 hours. You'll be notified by email once verified.</p>
             <div className={styles.successSteps}>
               <div className={styles.successStep}><CheckCircle size={14} /> Application submitted</div>
               <div className={styles.successStep} style={{ opacity: 0.5 }}><Shield size={14} /> Admin verification (in progress)</div>
               <div className={styles.successStep} style={{ opacity: 0.5 }}><Scale size={14} /> Profile goes live</div>
             </div>
-            <Link href="/" className="btn btn-primary" id="lawyer-reg-success-home">Return to Home</Link>
+            <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap", justifyContent: "center" }}>
+              <Link
+                href={submittedLawyerId ? `/lawyer/status?id=${submittedLawyerId}` : "/lawyer/status"}
+                className="btn btn-primary"
+                id="lawyer-reg-track-status"
+              >
+                Track Application Status
+              </Link>
+              <Link href="/" className="btn btn-ghost" id="lawyer-reg-success-home">Return to Home</Link>
+            </div>
           </motion.div>
         </div>
       </>
