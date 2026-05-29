@@ -76,6 +76,8 @@ GRANT EXECUTE ON FUNCTION public.lawyer_login(TEXT, TEXT) TO authenticated;
 -- The frontend reads: marksheet_url, bar_certificate_url, id_proof_url
 -- If your existing function doesn't return these, recreate it below.
 -- ============================================================
+DROP FUNCTION IF EXISTS public.admin_get_lawyers(TEXT);
+
 CREATE OR REPLACE FUNCTION public.admin_get_lawyers(p_token TEXT)
 RETURNS JSONB
 LANGUAGE plpgsql
