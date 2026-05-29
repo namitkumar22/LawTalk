@@ -29,8 +29,16 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState("pending"); // pending | verified | reports
 
   useEffect(() => {
-    if (!loading && !isAdmin) router.push("/admin");
+    if (!loading && !isAdmin) router.replace("/admin");
   }, [isAdmin, loading, router]);
+
+  // Prevent browser back from reaching this page after logout
+  useEffect(() => {
+    if (isAdmin) window.history.pushState(null, "", window.location.href);
+    const block = () => { if (isAdmin) window.history.pushState(null, "", window.location.href); };
+    window.addEventListener("popstate", block);
+    return () => window.removeEventListener("popstate", block);
+  }, [isAdmin]);
 
   const fetchData = useCallback(async () => {
     setDataLoading(true);
@@ -273,7 +281,7 @@ export default function AdminDashboardPage() {
               <p className={styles.adminRole}>@{adminSession?.username}</p>
             </div>
           </div>
-          <button className="btn btn-danger btn-sm" onClick={() => { adminLogout(); router.push("/admin"); }} id="admin-logout-btn">
+          <button className="btn btn-danger btn-sm" onClick={() => { adminLogout(); router.replace("/admin"); }} id="admin-logout-btn">
             <LogOut size={14} /> Logout
           </button>
         </div>

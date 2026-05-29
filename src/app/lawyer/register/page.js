@@ -174,12 +174,15 @@ export default function LawyerRegisterPage() {
           <motion.div className={styles.successCard} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
             <div className={styles.successIcon}><CheckCircle size={56} color="var(--emerald)" /></div>
             <h1>Application Submitted! 🎉</h1>
-            <p>Your registration has been received. Our admin team will verify your documents and credentials within 24–48 hours. You'll be notified by email once verified.</p>
+            <p>Your registration has been received. Our admin team will verify your documents within 24–48 hours.</p>
             <div className={styles.successSteps}>
               <div className={styles.successStep}><CheckCircle size={14} /> Application submitted</div>
               <div className={styles.successStep} style={{ opacity: 0.5 }}><Shield size={14} /> Admin verification (in progress)</div>
               <div className={styles.successStep} style={{ opacity: 0.5 }}><Scale size={14} /> Profile goes live</div>
             </div>
+            <p style={{ fontSize: "0.85rem", color: "var(--gold-400)", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "var(--radius-lg)", padding: "var(--space-3) var(--space-4)", lineHeight: 1.6 }}>
+              💡 You can <strong>sign in anytime</strong> at <Link href="/login" style={{ color: "var(--gold-300)", textDecoration: "underline" }}>/login</Link> using your registered email and password to check your application status.
+            </p>
             <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap", justifyContent: "center" }}>
               <Link
                 href={submittedLawyerId ? `/lawyer/status?id=${submittedLawyerId}` : "/lawyer/status"}
