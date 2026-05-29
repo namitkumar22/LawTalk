@@ -1,14 +1,17 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, X, IndianRupee, AlertTriangle, Star } from "lucide-react";
+import { Send, X, IndianRupee, AlertTriangle, Star, Flag, Clock, Shield } from "lucide-react";
 import { useLawyers } from "@/context/LawyerContext";
 import { useAuth } from "@/context/AuthContext";
 import { useChat } from "@/hooks/useChat";
 import Navbar from "@/components/layout/Navbar";
+import { supabase } from "@/utils/supabase/client";
 import styles from "./page.module.css";
+
+// ── Modals ──────────────────────────────────────────────────
 
 function EndSessionModal({ totalCharged, onConfirm, onCancel }) {
   const [rating, setRating] = useState(0);
@@ -22,7 +25,7 @@ function EndSessionModal({ totalCharged, onConfirm, onCancel }) {
         <div style={{ marginBottom: "var(--space-5)" }}>
           <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: "var(--space-3)" }}>Rate your experience (optional)</p>
           <div style={{ display: "flex", gap: "var(--space-2)" }}>
-            {[1,2,3,4,5].map((s) => (
+            {[1, 2, 3, 4, 5].map((s) => (
               <button key={s} onClick={() => setRating(s)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                 <Star size={28} fill={s <= rating ? "var(--gold-400)" : "transparent"} color="var(--gold-400)" />
               </button>
@@ -38,6 +41,136 @@ function EndSessionModal({ totalCharged, onConfirm, onCancel }) {
   );
 }
 
+function ReportModal({ lawyerName, consultationId, reporterId, lawyerId, onClose }) {
+  const [reason, setReason] = useState("");
+  const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+
+  const REASONS = [
+    "Lawyer ended chat without completing consultation",
+    "Lawyer demanded extra payment outside the platform",
+    "Inappropriate or offensive behavior",
+    "Gave wrong / harmful legal advice",
+    "Did not respond after payment",
+    "Other",
+  ];
+
+  const handleSubmit = async () => {
+    if (!reason || !description.trim()) {
+      setError("Please select a reason and provide details.");
+      return;
+    }
+    if (description.trim().length < 20) {
+      setError("Please provide more details (min. 20 characters).");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    const { data, error: rpcErr } = await supabase.rpc("submit_report", {
+      p_reporter_id: reporterId,
+      p_lawyer_id: lawyerId,
+      p_consultation_id: consultationId,
+      p_reason: reason,
+      p_description: description.trim(),
+    });
+    setSubmitting(false);
+    if (rpcErr || !data?.success) {
+      setError("Failed to submit report. Please try again.");
+    } else {
+      setDone(true);
+    }
+  };
+
+  return (
+    <motion.div className="modal-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+      <motion.div
+        className="modal-content"
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9 }}
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: 520 }}
+      >
+        {done ? (
+          <div style={{ textAlign: "center", padding: "var(--space-4)" }}>
+            <Shield size={48} color="var(--emerald)" style={{ margin: "0 auto 1rem", display: "block" }} />
+            <h3>Report Submitted</h3>
+            <p style={{ color: "var(--text-muted)", margin: "0.75rem 0 1.5rem", lineHeight: 1.6 }}>
+              Your report has been received and automatically assigned to an admin for review.
+              We take all reports seriously and will respond within <strong>24–48 hours</strong>.
+            </p>
+            <button className="btn btn-primary" onClick={onClose} id="report-done-btn" style={{ width: "100%", justifyContent: "center" }}>
+              Close
+            </button>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--space-5)" }}>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <Flag size={20} color="#f87171" /> Report {lawyerName}
+              </h2>
+              <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Reason for report *</label>
+              <select
+                className="form-select"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                id="report-reason"
+              >
+                <option value="">Select a reason…</option>
+                {REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Details * (min. 20 characters)</label>
+              <textarea
+                className="form-textarea"
+                rows={4}
+                placeholder="Describe what happened in detail. The more information you provide, the better we can help."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                id="report-description"
+              />
+              <span style={{ fontSize: "0.75rem", color: description.length < 20 ? "var(--text-muted)" : "var(--emerald)" }}>
+                {description.length}/20 min characters
+              </span>
+            </div>
+
+            {error && (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#f87171", fontSize: "0.85rem", marginBottom: "var(--space-4)" }}>
+                <AlertTriangle size={14} /> {error}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "var(--space-3)" }}>
+              <button className="btn btn-ghost" onClick={onClose} id="report-cancel-btn">Cancel</button>
+              <button
+                className="btn btn-danger"
+                style={{ flex: 1, justifyContent: "center" }}
+                onClick={handleSubmit}
+                disabled={submitting}
+                id="report-submit-btn"
+              >
+                {submitting ? <span className="spinner" /> : <><Flag size={14} /> Submit Report</>}
+              </button>
+            </div>
+          </>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ── Main Chat Page ───────────────────────────────────────────
+
 export default function ChatPage({ params }) {
   const { id: consultationId } = use(params);
   const searchParams = useSearchParams();
@@ -52,6 +185,8 @@ export default function ChatPage({ params }) {
   const [input, setInput] = useState("");
   const [sessionStarted, setSessionStarted] = useState(false);
   const [showEndModal, setShowEndModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null); // minutes until auto-expire
   const messagesEndRef = useRef(null);
 
   // Redirect if not authenticated
@@ -72,6 +207,29 @@ export default function ChatPage({ params }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  // Check remaining time (24h window) — poll every minute
+  useEffect(() => {
+    if (!consultationId || !sessionActive) return;
+
+    const checkExpiry = async () => {
+      const { data } = await supabase
+        .from("consultations")
+        .select("auto_expires_at")
+        .eq("id", consultationId)
+        .single();
+
+      if (data?.auto_expires_at) {
+        const diffMs = new Date(data.auto_expires_at) - Date.now();
+        const diffMin = Math.floor(diffMs / 60000);
+        setTimeLeft(diffMin > 0 ? diffMin : 0);
+      }
+    };
+
+    checkExpiry();
+    const t = setInterval(checkExpiry, 60000);
+    return () => clearInterval(t);
+  }, [consultationId, sessionActive]);
 
   const handleSend = async () => {
     if (!input.trim() || !sessionActive || !user) return;
@@ -94,7 +252,14 @@ export default function ChatPage({ params }) {
   };
 
   const handleEndSession = async (rating) => {
-    await endSession(rating);
+    // Use the secure RPC which records who ended the session
+    await supabase.rpc("end_consultation", {
+      p_consultation_id: consultationId,
+      p_actor_id: user.id,
+      p_actor_type: "user",
+      p_rating: rating || null,
+    });
+    await endSession(rating); // update local state
     setShowEndModal(false);
     if (rating > 0 && lawyer) {
       const newRating = ((lawyer.rating * lawyer.reviewCount) + rating) / (lawyer.reviewCount + 1);
@@ -111,6 +276,9 @@ export default function ChatPage({ params }) {
   const initials = lawyer?.name?.replace("Adv. ", "").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "LA";
 
   if (!lawyer || !isAuthenticated) return null;
+
+  // Show warning when < 60 minutes left
+  const showExpiryWarning = timeLeft !== null && timeLeft < 60 && sessionActive;
 
   return (
     <>
@@ -135,6 +303,16 @@ export default function ChatPage({ params }) {
               <span>{totalCharged}</span>
               <span className={styles.chargeLabel}>charged</span>
             </div>
+            {/* Report button — always visible */}
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => setShowReportModal(true)}
+              id="chat-report-btn"
+              title="Report this lawyer"
+              style={{ color: "#f87171" }}
+            >
+              <Flag size={14} /> Report
+            </button>
             {sessionActive && (
               <button className="btn btn-danger btn-sm" onClick={() => setShowEndModal(true)} id="chat-end-session-btn">
                 <X size={14} /> End Session
@@ -143,8 +321,21 @@ export default function ChatPage({ params }) {
           </div>
         </div>
 
+        {/* Auto-expiry warning */}
+        {showExpiryWarning && (
+          <motion.div
+            className={styles.firstMsgBanner}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ background: "rgba(244,63,94,0.1)", borderColor: "rgba(244,63,94,0.3)", color: "#f87171" }}
+          >
+            <Clock size={14} />
+            Session auto-closes in {timeLeft < 1 ? "less than a minute" : `${timeLeft} minutes`}. End it manually before time runs out.
+          </motion.div>
+        )}
+
         {/* First message banner */}
-        {messages.length === 0 && sessionActive && (
+        {messages.length === 0 && sessionActive && !showExpiryWarning && (
           <motion.div className={styles.firstMsgBanner} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <IndianRupee size={14} />
             Your first message is only ₹2. After that, charges are ₹{lawyer.pricePerMinute}/chat.
@@ -156,6 +347,14 @@ export default function ChatPage({ params }) {
           <div className={styles.endedBanner}>
             <AlertTriangle size={14} />
             This session has ended. Total charged: ₹{totalCharged}
+            {" · "}
+            <button
+              style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: "0.82rem", padding: 0 }}
+              onClick={() => setShowReportModal(true)}
+              id="chat-report-after-end-btn"
+            >
+              <Flag size={12} /> Report an issue
+            </button>
           </div>
         )}
 
@@ -232,7 +431,7 @@ export default function ChatPage({ params }) {
               <textarea
                 id="chat-input"
                 className={styles.chatInput}
-                placeholder="Type your legal question..."
+                placeholder="Type your legal question…"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -251,20 +450,35 @@ export default function ChatPage({ params }) {
           ) : (
             <div className={styles.sessionEndedInput}>
               <p>Session has ended.</p>
-              <button className="btn btn-primary" onClick={() => router.push("/lawyers")} id="chat-find-another-btn">
-                Find Another Lawyer
-              </button>
+              <div style={{ display: "flex", gap: "var(--space-3)" }}>
+                <button className="btn btn-ghost" onClick={() => setShowReportModal(true)} id="chat-report-ended-btn" style={{ color: "#f87171" }}>
+                  <Flag size={14} /> Report Issue
+                </button>
+                <button className="btn btn-primary" onClick={() => router.push("/lawyers")} id="chat-find-another-btn">
+                  Find Another Lawyer
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
 
+      {/* Modals */}
       <AnimatePresence>
         {showEndModal && (
           <EndSessionModal
             totalCharged={totalCharged}
             onConfirm={handleEndSession}
             onCancel={() => setShowEndModal(false)}
+          />
+        )}
+        {showReportModal && user && lawyer && (
+          <ReportModal
+            lawyerName={lawyer.name}
+            consultationId={consultationId}
+            reporterId={user.id}
+            lawyerId={lawyer.id}
+            onClose={() => setShowReportModal(false)}
           />
         )}
       </AnimatePresence>

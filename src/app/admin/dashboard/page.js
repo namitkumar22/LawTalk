@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, CheckCircle, XCircle, Clock, LogOut, Eye, UserPlus, X, AlertCircle, RefreshCw } from "lucide-react";
+import { Shield, Users, CheckCircle, XCircle, Clock, LogOut, Eye, UserPlus, X, AlertCircle, RefreshCw, Flag, FileText } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
 import { supabase } from "@/utils/supabase/client";
 import { LAWYER_STATUS } from "@/lib/constants";
@@ -14,6 +14,7 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const { adminSession, isAdmin, adminLogout, loading, createAdmin } = useAdmin();
   const [lawyers, setLawyers] = useState([]);
+  const [reports, setReports] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [showCreateAdmin, setShowCreateAdmin] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ username: "", password: "", name: "" });
@@ -34,8 +35,27 @@ export default function AdminDashboardPage() {
     // Use RPC so SECURITY DEFINER bypasses RLS
     const { data, error } = await supabase.rpc("admin_get_lawyers", { p_token: token });
     if (!error && data?.success) setLawyers(data.data || []);
+
+    // Fetch reports assigned to this admin
+    const { data: rData, error: rError } = await supabase.rpc("admin_get_reports", { p_token: token });
+    if (!rError && rData?.success) setReports(rData.data || []);
+
     setDataLoading(false);
   }, []);
+
+  // Update report status
+  const handleUpdateReport = async (reportId, status, notes = "") => {
+    const token = localStorage.getItem("lawtalk_admin_token");
+    const { data } = await supabase.rpc("admin_update_report", {
+      p_token: token,
+      p_report_id: reportId,
+      p_status: status,
+      p_admin_notes: notes || null,
+    });
+    if (data?.success) {
+      setReports((prev) => prev.map((r) => r.id === reportId ? { ...r, status } : r));
+    }
+  };
 
   useEffect(() => {
     if (isAdmin) fetchLawyers();
@@ -52,6 +72,7 @@ export default function AdminDashboardPage() {
     { label: "Verified Lawyers", value: verifiedLawyers.length, icon: CheckCircle, color: "rgba(16,185,129,0.1)", iconColor: "var(--emerald)" },
     { label: "Rejected", value: rejectedLawyers.length, icon: XCircle, color: "rgba(244,63,94,0.1)", iconColor: "#f87171" },
     { label: "Total Registered", value: lawyers.length, icon: Users, color: "rgba(139,92,246,0.1)", iconColor: "var(--violet)" },
+    { label: "Open Reports", value: reports.filter((r) => r.status === "open").length, icon: Flag, color: "rgba(244,63,94,0.08)", iconColor: "#f87171" },
   ];
 
   const handleVerify = async (lawyerId, newStatus, reason = "") => {
@@ -347,6 +368,86 @@ export default function AdminDashboardPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Reports Section */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>
+              <Flag size={18} style={{ color: "#f87171" }} /> Reports Assigned to You
+              {reports.filter((r) => r.status === "open").length > 0 && (
+                <span className="badge badge-gold" style={{ marginLeft: "var(--space-3)", fontSize: "0.75rem" }}>
+                  {reports.filter((r) => r.status === "open").length} open
+                </span>
+              )}
+            </h2>
+          </div>
+
+          {dataLoading ? (
+            <div className={styles.empty}><span className="spinner" /></div>
+          ) : reports.length === 0 ? (
+            <div className={styles.empty}>
+              <CheckCircle size={40} color="var(--emerald)" />
+              <p>No reports assigned to you. Great job! 🎉</p>
+            </div>
+          ) : (
+            <div className={styles.applicationList}>
+              {reports.map((report, i) => (
+                <motion.div
+                  key={report.id}
+                  className={styles.applicationCard}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                >
+                  <div className={styles.appLeft}>
+                    <div style={{ width: 40, height: 40, borderRadius: "var(--radius-md)", background: "rgba(244,63,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Flag size={18} color="#f87171" />
+                    </div>
+                    <div className={styles.appInfo}>
+                      <p className={styles.appName} style={{ color: "#f87171" }}>{report.reason}</p>
+                      <p className={styles.appSpec}>{report.description?.slice(0, 100)}{report.description?.length > 100 ? "…" : ""}</p>
+                      <p className={styles.appMeta}>Reported on {new Date(report.created_at).toLocaleDateString("en-IN")} · Consultation: {report.consultation_id?.slice(0, 8) || "N/A"}</p>
+                    </div>
+                  </div>
+                  <div className={styles.appRight}>
+                    <span className={`badge ${report.status === "open" ? "badge-gold" : report.status === "resolved" ? "badge-green" : "badge"}`}>
+                      {report.status === "open" ? <><Clock size={11} /> Open</> : report.status === "investigating" ? <><Eye size={11} /> Investigating</> : report.status === "resolved" ? <><CheckCircle size={11} /> Resolved</> : <><XCircle size={11} /> Dismissed</>}
+                    </span>
+                    {report.status === "open" && (
+                      <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => handleUpdateReport(report.id, "investigating")}
+                          id={`admin-report-investigate-${report.id}`}
+                        >
+                          <Eye size={12} /> Investigate
+                        </button>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => {
+                            const notes = prompt("Resolution notes:");
+                            if (notes !== null) handleUpdateReport(report.id, "resolved", notes);
+                          }}
+                          id={`admin-report-resolve-${report.id}`}
+                        >
+                          <CheckCircle size={12} /> Resolve
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleUpdateReport(report.id, "dismissed")}
+                          style={{ fontSize: "0.7rem" }}
+                          id={`admin-report-dismiss-${report.id}`}
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </section>
       </main>
     </div>

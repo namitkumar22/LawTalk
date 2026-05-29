@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Shield, Lock, Eye, EyeOff, AlertCircle, Scale, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { Shield, Lock, Eye, EyeOff, AlertCircle, Scale } from "lucide-react";
 import { useAdmin } from "@/context/AdminContext";
 import styles from "./page.module.css";
 
@@ -123,6 +124,16 @@ export default function AdminLoginPage() {
           >
             {loading ? <span className="spinner" /> : <><Lock size={16} /> Sign In as Admin</>}
           </button>
+
+          <div style={{ textAlign: "center", marginTop: "var(--space-4)" }}>
+            <Link
+              href="/admin/forgot-password"
+              style={{ fontSize: "0.82rem", color: "var(--text-muted)", textDecoration: "none" }}
+              id="admin-forgot-pw-link"
+            >
+              Forgot your password?
+            </Link>
+          </div>
         </form>
 
         <p className={styles.notice}>

@@ -156,75 +156,73 @@ export function LawyerProvider({ children }) {
   }, []);
 
   // Register a new lawyer (submit application)
+  // Uses SECURITY DEFINER RPCs to bypass RLS — lawyers are not Supabase Auth users
   const registerLawyer = useCallback(async (formData, documents) => {
     try {
-      // 1. Insert lawyer record
-      const { data: lawyerRecord, error: lawyerError } = await supabase
-        .from("lawyers")
-        .insert({
-          name: formData.name.trim(),
-          email: formData.email.toLowerCase().trim(),
-          city: formData.city.trim(),
-          state: formData.state,
-          dob: formData.dob || null,
-          bar_council_id: formData.barCouncilId.trim(),
-          specializations: formData.specializations,
-          experience: parseInt(formData.experience) || 0,
-          languages: formData.languages,
-          bio: formData.bio.trim(),
-          education: formData.education.trim(),
-          price_per_chat: parseInt(formData.pricePerMinute) || 30,
-          availability: formData.availability || "always",
-          status: "pending",
-        })
-        .select()
-        .single();
+      // 1. Call register_lawyer RPC (bypasses RLS via SECURITY DEFINER)
+      const { data: rpcResult, error: rpcError } = await supabase.rpc("register_lawyer", {
+        p_name: formData.name.trim(),
+        p_email: formData.email.toLowerCase().trim(),
+        p_city: formData.city.trim(),
+        p_state: formData.state,
+        p_dob: formData.dob || null,
+        p_bar_council_id: formData.barCouncilId.trim(),
+        p_specializations: formData.specializations,
+        p_experience: parseInt(formData.experience) || 0,
+        p_languages: formData.languages,
+        p_bio: formData.bio.trim(),
+        p_education: formData.education.trim(),
+        p_price_per_chat: parseInt(formData.pricePerMinute) || 30,
+        p_availability: formData.availability || "always",
+      });
 
-      if (lawyerError) {
-        if (lawyerError.code === "23505") {
-          return { error: "An application with this email already exists." };
-        }
-        return { error: lawyerError.message };
-      }
+      if (rpcError) return { error: rpcError.message };
+      if (!rpcResult?.success) return { error: rpcResult?.error || "Registration failed." };
+
+      const lawyerId = rpcResult.lawyer_id;
 
       // 2. Upload documents to Supabase Storage
-      const docUploads = {};
-      const docFields = ["marksheet", "barCertificate", "idProof"];
-      const dbFields = ["marksheet_url", "bar_certificate_url", "id_proof_url"];
+      const docUploads = { marksheet_url: null, bar_certificate_url: null, id_proof_url: null };
+      const docMap = [
+        { field: "marksheet", dbField: "marksheet_url" },
+        { field: "barCertificate", dbField: "bar_certificate_url" },
+        { field: "idProof", dbField: "id_proof_url" },
+      ];
 
-      for (let i = 0; i < docFields.length; i++) {
-        const doc = documents[docFields[i]];
+      for (const { field, dbField } of docMap) {
+        const doc = documents[field];
         if (doc) {
           const ext = doc.name.split(".").pop();
-          const path = `${lawyerRecord.id}/${docFields[i]}.${ext}`;
-          const { data: uploadData, error: uploadError } = await supabase.storage
+          const path = `${lawyerId}/${field}.${ext}`;
+          const { error: uploadError } = await supabase.storage
             .from("lawyer-documents")
             .upload(path, doc, { upsert: true });
 
-          if (!uploadError) {
-            docUploads[dbFields[i]] = path;
-          }
+          if (!uploadError) docUploads[dbField] = path;
         }
       }
 
-      // 3. Update document URLs
-      if (Object.keys(docUploads).length > 0) {
-        await supabase
-          .from("lawyers")
-          .update(docUploads)
-          .eq("id", lawyerRecord.id);
+      // 3. Update document URLs via RPC (bypasses RLS)
+      if (Object.values(docUploads).some(Boolean)) {
+        await supabase.rpc("update_lawyer_docs", {
+          p_lawyer_id: lawyerId,
+          p_marksheet_url: docUploads.marksheet_url,
+          p_bar_certificate_url: docUploads.bar_certificate_url,
+          p_id_proof_url: docUploads.id_proof_url,
+        });
       }
 
-      // 4. Create lawyer auth record (email + password for lawyer login)
-      const { error: authError } = await supabase
-        .from("lawyer_auth")
-        .insert({
-          lawyer_id: lawyerRecord.id,
-          email: formData.email.toLowerCase().trim(),
-          password_hash: formData.password, // Will be hashed via DB trigger or API route
-        });
+      // 4. Create lawyer auth (email + hashed password) via RPC
+      // Generate a simple verify token — in production, email this link
+      const verifyToken = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      await supabase.rpc("create_lawyer_auth", {
+        p_lawyer_id: lawyerId,
+        p_email: formData.email.toLowerCase().trim(),
+        p_password_hash: formData.password, // DB hashes with pgcrypto
+        p_verify_token: verifyToken,
+      });
 
-      return { success: true, lawyerId: lawyerRecord.id };
+      return { success: true, lawyerId };
     } catch (e) {
       return { error: e.message || "Registration failed" };
     }
