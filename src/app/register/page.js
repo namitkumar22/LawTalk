@@ -20,9 +20,16 @@ const INDIAN_STATES = [
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { registerUser } = useAuth();
+  const { registerUser, isAuthenticated, user, loading } = useAuth();
+
+  // Guard: redirect if already logged in
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      router.replace(user?.role === "lawyer" ? "/lawyer/dashboard" : "/dashboard");
+    }
+  }, [isAuthenticated, loading, user, router]);
   const [step, setStep] = useState("form"); // form | verify | success
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -58,7 +65,7 @@ export default function RegisterPage() {
     const err = validateForm();
     if (err) { setError(err); return; }
     setError("");
-    setLoading(true);
+    setSubmitting(true);
 
     const result = await registerUser({
       name: form.name.trim(),
@@ -69,7 +76,7 @@ export default function RegisterPage() {
       dob: form.dob,
     });
 
-    setLoading(false);
+    setSubmitting(false);
 
     if (result.error) {
       setError(result.error);
@@ -234,10 +241,10 @@ export default function RegisterPage() {
                     type="submit"
                     className="btn btn-primary"
                     style={{ width: "100%", justifyContent: "center" }}
-                    disabled={loading}
+                    disabled={submitting}
                     id="register-submit-btn"
                   >
-                    {loading ? <span className="spinner" /> : <>Create Account <ArrowRight size={16} /></>}
+                    {submitting ? <span className="spinner" /> : <>Create Account <ArrowRight size={16} /></>}
                   </button>
 
                   <p className={styles.switch}>

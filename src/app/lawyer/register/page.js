@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scale, CheckCircle, User, Briefcase, IndianRupee, Upload, ArrowRight, ArrowLeft, AlertCircle, Shield, Eye, EyeOff } from "lucide-react";
 import { useLawyers } from "@/context/LawyerContext";
+import { useAuth } from "@/context/AuthContext";
 import { SPECIALIZATIONS, LANGUAGES } from "@/lib/constants";
 import Navbar from "@/components/layout/Navbar";
 import styles from "./page.module.css";
@@ -29,6 +30,14 @@ const INDIAN_STATES = [
 export default function LawyerRegisterPage() {
   const router = useRouter();
   const { registerLawyer } = useLawyers();
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
+
+  // Guard: redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace(user?.role === "lawyer" ? "/lawyer/dashboard" : "/dashboard");
+    }
+  }, [isAuthenticated, authLoading, user, router]);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
